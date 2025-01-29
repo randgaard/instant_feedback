@@ -1,24 +1,18 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta
-    name="viewport"
-    content="width=device-width, initial-scale=1.0"
-  />
-  <title>CA - Instant Feedback 2.0</title>
-  <!-- Tailwind CSS CDN -->
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1.0">
+  <title>CV og Ansøgning Feedback</title>
   <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="bg-gray-100 min-h-screen flex items-center justify-center">
   <div class="max-w-3xl w-full bg-white rounded-2xl shadow-lg p-6 my-8">
     <h1 class="text-2xl font-bold text-center">Instant Feedback 2.0</h1>
     <p class="text-center text-gray-600 mb-6">
-      Upload CV og ansøgning for at få feedback
+      Upload CV og (valgfrit) ansøgning for at få feedback
     </p>
-    <p class="text-center text-gray-600 mb-6">
-      Feedbacken er AI-genereret, hvilket nogle gange kan give uforudsigelige resultater.
-    </p>
+
     <form id="uploadForm" class="space-y-4" enctype="multipart/form-data">
       <!-- Flex container for side-by-side fields -->
       <div class="flex flex-col md:flex-row gap-4">
@@ -47,7 +41,7 @@
           class="flex-1 p-6 border-2 border-dashed border-gray-300 rounded-md text-center transition-colors hover:border-blue-500 hover:bg-blue-50"
         >
           <label for="cover_letter" class="font-semibold mb-2 block"
-            >Ansøgning</label
+            >Ansøgning (valgfrit)</label
           >
           <p class="text-gray-500" id="cover-dropzone-text">
             Træk en PDF-fil her eller klik for at vælge
@@ -57,7 +51,6 @@
             id="cover_letter"
             name="cover_letter"
             accept=".pdf"
-            required
             class="hidden"
           />
         </div>
@@ -104,8 +97,6 @@
         'bg-green-100',
         'border-green-500'
       );
-
-      // Sæt default border/styling
       dropzone.classList.add('border-2', 'border-dashed', 'rounded-md', 'transition-colors');
 
       if (fileCount > 0) {
@@ -116,9 +107,7 @@
     }
 
     function addDragAndDropListeners(dropzone, input, textElement) {
-      dropzone.addEventListener('click', () => {
-        input.click();
-      });
+      dropzone.addEventListener('click', () => input.click());
 
       dropzone.addEventListener('dragover', (e) => {
         e.preventDefault();
@@ -169,81 +158,91 @@
     addDragAndDropListeners(cvDropzone, cvInput, cvDropzoneText);
     addDragAndDropListeners(coverDropzone, coverInput, coverDropzoneText);
 
-    // Simpel funktion til at toggle accordion
+    // Accordion toggle
     function toggleAccordion(elementId) {
-      const content = document.getElementById(elementId);
-      content.classList.toggle('hidden');
+      document.getElementById(elementId).classList.toggle('hidden');
     }
 
     form.addEventListener('submit', async (event) => {
       event.preventDefault();
       const formData = new FormData(form);
 
-      // Vis loading-indikator
       loadingIndicator.classList.remove('hidden');
       feedbackDiv.innerHTML = '';
 
       try {
-        const response = await fetch('/upload', {
-          method: 'POST',
-          body: formData
-        });
-
+        const response = await fetch('/upload', { method: 'POST', body: formData });
         const result = await response.json();
         loadingIndicator.classList.add('hidden');
 
         if (response.ok) {
+          // NYT: Tjek om cover_letter_feedback eksisterer
           const cv = result.cv_feedback;
-          const cover = result.cover_letter_feedback;
+          const cover = result.cover_letter_feedback; // Kan være undefined, hvis ingen ansøgning
 
-          // Her indsætter vi et Accordion-layout med to sektioner: et for CV og et for Ansøgning
-          feedbackDiv.innerHTML = `
-            <div class="bg-gray-50 p-4 rounded-xl shadow">
-              <h2 class="text-xl font-bold mb-4">Instant Feedback 2.0</h2>
-              
-              <!-- CV Feedback Accordion -->
-              <div class="border rounded-md mb-4">
-                <button
-                  onclick="toggleAccordion('cvFeedbackContent')"
-                  class="w-full flex items-center justify-between px-4 py-2 bg-blue-100 focus:outline-none"
-                >
-                  <span class="font-semibold text-blue-700">CV Feedback</span>
-                  <svg class="w-5 h-5 text-blue-700" fill="currentColor" viewBox="0 0 20 20">
-                    <path d="M5.23 7.21l4.77 4.77 4.77-4.77C15.11 6.86 15.27 6.8 15.46 6.8c.38 0 .63.29.63.62 0 .17-.06.35-.19.49l-5.39 5.39a.71.71 0 01-1 0L4.1 7.91A.7.7 0 014 7.42c0-.33.25-.62.63-.62.2 0 .36.06.49.2z"></path>
-                  </svg>
-                </button>
-                <div id="cvFeedbackContent" class="hidden p-4 bg-white">
-                  <ul class="list-disc list-inside space-y-2 text-gray-700">
-                    <li><strong>Stærke sider:</strong> ${cv.strong_sides}</li>
-                    <li><strong>Udviklingspotentiale:</strong> ${cv.areas_for_improvement}</li>
-                    <li><strong>Forslag til forbedring:</strong> ${cv.improvement_suggestions}</li>
-                    <li><strong>Yderligere tips:</strong> ${cv.additional_tips}</li>
-                  </ul>
+          // Hvis bruger KUN uploadede CV:
+          if (!cover) {
+            feedbackDiv.innerHTML = `
+              <div class="bg-gray-50 p-4 rounded-xl shadow">
+                <h2 class="text-xl font-bold mb-4">Feedback på CV</h2>
+                <ul class="list-disc ml-5 space-y-2 text-gray-700">
+                  <li><strong>Stærke sider:</strong> ${cv.strong_sides}</li>
+                  <li><strong>Udviklingspotentiale:</strong> ${cv.areas_for_improvement}</li>
+                  <li><strong>Forslag til forbedring:</strong> ${cv.improvement_suggestions}</li>
+                  <li><strong>Yderligere tips:</strong> ${cv.additional_tips}</li>
+                </ul>
+              </div>
+            `;
+          } else {
+            // Ellers: CV + ansøgning feedback i en Accordion
+            feedbackDiv.innerHTML = `
+              <div class="bg-gray-50 p-4 rounded-xl shadow">
+                <h2 class="text-xl font-bold mb-4">Feedback</h2>
+                
+                <!-- CV Feedback Accordion -->
+                <div class="border rounded-md mb-4">
+                  <button
+                    onclick="toggleAccordion('cvFeedbackContent')"
+                    class="w-full flex items-center justify-between px-4 py-2 bg-blue-100 focus:outline-none"
+                  >
+                    <span class="font-semibold text-blue-700">CV Feedback</span>
+                    <svg class="w-5 h-5 text-blue-700" fill="currentColor" viewBox="0 0 20 20">
+                      <path d="M5.23 7.21l4.77 4.77 4.77-4.77C15.11 6.86 15.27 6.8 15.46 6.8c.38 0 .63.29.63.62 0 .17-.06.35-.19.49l-5.39 5.39a.71.71 0 01-1 0L4.1 7.91A.7.7 0 014 7.42c0-.33.25-.62.63-.62.2 0 .36.06.49.2z"></path>
+                    </svg>
+                  </button>
+                  <div id="cvFeedbackContent" class="hidden p-4 bg-white">
+                    <ul class="list-disc list-inside space-y-2 text-gray-700">
+                      <li><strong>Stærke sider:</strong> ${cv.strong_sides}</li>
+                      <li><strong>Udviklingspotentiale:</strong> ${cv.areas_for_improvement}</li>
+                      <li><strong>Forslag til forbedring:</strong> ${cv.improvement_suggestions}</li>
+                      <li><strong>Yderligere tips:</strong> ${cv.additional_tips}</li>
+                    </ul>
+                  </div>
+                </div>
+
+                <!-- Ansøgning Feedback Accordion -->
+                <div class="border rounded-md">
+                  <button
+                    onclick="toggleAccordion('coverLetterContent')"
+                    class="w-full flex items-center justify-between px-4 py-2 bg-blue-100 focus:outline-none"
+                  >
+                    <span class="font-semibold text-blue-700">Ansøgning Feedback</span>
+                    <svg class="w-5 h-5 text-blue-700" fill="currentColor" viewBox="0 0 20 20">
+                      <path d="M5.23 7.21l4.77 4.77 4.77-4.77C15.11 6.86 15.27 6.8 15.46 6.8c.38 0 .63.29.63.62 0 .17-.06.35-.19.49l-5.39 5.39a.71.71 0 01-1 0L4.1 7.91A.7.7 0 014 7.42c0-.33.25-.62.63-.62.2 0 .36.06.49.2z"></path>
+                    </svg>
+                  </button>
+                  <div id="coverLetterContent" class="hidden p-4 bg-white">
+                    <ul class="list-disc list-inside space-y-2 text-gray-700">
+                      <li><strong>Stærke sider:</strong> ${cover.strong_sides}</li>
+                      <li><strong>Udviklingspotentiale:</strong> ${cover.areas_for_improvement}</li>
+                      <li><strong>Forslag til forbedring:</strong> ${cover.improvement_suggestions}</li>
+                      <li><strong>Yderligere tips:</strong> ${cover.additional_tips}</li>
+                    </ul>
+                  </div>
                 </div>
               </div>
-
-              <!-- Ansøgning Feedback Accordion -->
-              <div class="border rounded-md">
-                <button
-                  onclick="toggleAccordion('coverLetterContent')"
-                  class="w-full flex items-center justify-between px-4 py-2 bg-blue-100 focus:outline-none"
-                >
-                  <span class="font-semibold text-blue-700">Ansøgning Feedback</span>
-                  <svg class="w-5 h-5 text-blue-700" fill="currentColor" viewBox="0 0 20 20">
-                    <path d="M5.23 7.21l4.77 4.77 4.77-4.77C15.11 6.86 15.27 6.8 15.46 6.8c.38 0 .63.29.63.62 0 .17-.06.35-.19.49l-5.39 5.39a.71.71 0 01-1 0L4.1 7.91A.7.7 0 014 7.42c0-.33.25-.62.63-.62.2 0 .36.06.49.2z"></path>
-                  </svg>
-                </button>
-                <div id="coverLetterContent" class="hidden p-4 bg-white">
-                  <ul class="list-disc list-inside space-y-2 text-gray-700">
-                    <li><strong>Stærke sider:</strong> ${cover.strong_sides}</li>
-                    <li><strong>Udviklingspotentiale:</strong> ${cover.areas_for_improvement}</li>
-                    <li><strong>Forslag til forbedring:</strong> ${cover.improvement_suggestions}</li>
-                    <li><strong>Yderligere tips:</strong> ${cover.additional_tips}</li>
-                  </ul>
-                </div>
-              </div>
-            </div>
-          `;
+            `;
+          }
         } else {
           feedbackDiv.innerHTML = `
             <div class="bg-red-50 p-4 rounded-xl shadow">
