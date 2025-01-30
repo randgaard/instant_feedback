@@ -58,7 +58,7 @@ def upload_files():
             chat = client.chat.completions.create(
                 model="gpt-4o-mini",
                 messages=[
-                    {"role": "user", "content": "Giv feedback baseret på dette CV og ansøgning:"},
+                    {"role": "user", "content": "Giv feedback baseret på mit CV og ansøgning:"},
                     {"role": "user", "content": f"CV: {cv_markdown}"},
                     {"role": "user", "content": f"Ansøgning: {cover_letter_markdown}"}
                 ],
@@ -126,7 +126,7 @@ def upload_files():
             chat = client.chat.completions.create(
                 model="gpt-4o-mini",
                 messages=[
-                    {"role": "user", "content": "Giv feedback baseret på dette CV:"},
+                    {"role": "user", "content": "Giv feedback baseret på mit CV:"},
                     {"role": "user", "content": f"CV: {cv_markdown}"}
                 ],
                 response_format={
